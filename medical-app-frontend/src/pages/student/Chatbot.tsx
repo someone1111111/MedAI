@@ -35,7 +35,7 @@ export default function Chatbot() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = async (text: string) => {
+const sendMessage = async (text: string) => {
     if (!text.trim()) return
 
     const userMsg: Message = {
@@ -49,17 +49,34 @@ export default function Chatbot() {
     setInput('')
     setLoading(true)
 
-    // Simulated AI response for now — will connect to your local model later
-    setTimeout(() => {
+    try {
+      const res = await fetch('http://localhost:8000/chat/student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text.trim(),
+          history: messages.map(m => ({ role: m.role, text: m.text }))
+        })
+      })
+      const data = await res.json()
       const aiMsg: Message = {
         id: messages.length + 1,
         role: 'ai',
-        text: `This is a placeholder response to: "${text.trim()}". Once we connect your local AI model (Ollama + Mistral), I will give you real medical answers here!`,
+        text: data.response,
         time: getTime()
       }
       setMessages(prev => [...prev, aiMsg])
+    } catch (err) {
+      const aiMsg: Message = {
+        id: messages.length + 1,
+        role: 'ai',
+        text: 'Could not reach the AI. Make sure Ollama is running with Mistral installed.',
+        time: getTime()
+      }
+      setMessages(prev => [...prev, aiMsg])
+    } finally {
       setLoading(false)
-    }, 1200)
+    }
   }
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {

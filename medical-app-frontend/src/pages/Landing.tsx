@@ -1,7 +1,17 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
+
+  // Redirect logged in users to their dashboard
+  if (isAuthenticated && user?.role === 'student') {
+    return <Navigate to="/student" replace />
+  }
+  if (isAuthenticated && user?.role === 'patient') {
+    return <Navigate to="/patient" replace />
+  }
 
   return (
     <div className="min-h-[90vh] flex flex-col items-center justify-center gap-12 px-6 bg-gray-50">
@@ -47,8 +57,11 @@ export default function Landing() {
             Describe your symptoms and get AI-assisted medical guidance
           </p>
           <div className="mt-6 py-2 px-4 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium group-hover:bg-purple-100 transition-colors">
-            Enter Patient Space →
+            Enter as Visitor →
           </div>
+          <p className="text-xs text-gray-400 mt-2">
+            No account needed · Create one to save your history
+          </p>
         </div>
 
       </div>

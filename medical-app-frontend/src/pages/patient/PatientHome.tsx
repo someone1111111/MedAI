@@ -5,7 +5,7 @@ const features = [
     icon: '📋',
     title: 'Describe Your Symptoms',
     description: 'Tell us what you are feeling and for how long. Our AI will help make sense of it.',
-    path: '/patient/symptoms',
+    path: '/patient/health',
     color: 'purple',
   },
   {

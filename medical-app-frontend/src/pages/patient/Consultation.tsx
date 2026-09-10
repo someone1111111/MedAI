@@ -31,7 +31,7 @@ export default function Consultation() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = async (text: string) => {
+ const sendMessage = async (text: string) => {
     if (!text.trim()) return
 
     const userMsg: Message = {
@@ -45,18 +45,41 @@ export default function Consultation() {
     setInput('')
     setLoading(true)
 
-    setTimeout(() => {
+    try {
+      const contextStr = form
+        ? `Patient: ${form.name}, Age: ${form.age}, Gender: ${form.gender}. Main symptom: ${form.mainSymptom}. Duration: ${form.duration}. Severity: ${form.severity}/10. Other symptoms: ${form.otherSymptoms.join(', ') || 'none'}. Notes: ${form.notes || 'none'}.`
+        : null
+
+      const res = await fetch('http://localhost:8000/chat/patient', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text.trim(),
+          history: messages.map(m => ({ role: m.role, text: m.text })),
+          context: contextStr
+        })
+      })
+      const data = await res.json()
       const aiMsg: Message = {
         id: messages.length + 1,
         role: 'ai',
-        text: `Thank you for sharing that. This is a placeholder response to: "${text.trim()}". Once connected to your local AI model, I will provide real medical guidance here. Remember this is for educational purposes only — always consult a real doctor.`,
+        text: data.response,
         time: getTime()
       }
       setMessages(prev => [...prev, aiMsg])
+    } catch (err) {
+      const aiMsg: Message = {
+        id: messages.length + 1,
+        role: 'ai',
+        text: 'Could not reach the AI. Make sure Ollama is running with Mistral installed.',
+        time: getTime()
+      }
+      setMessages(prev => [...prev, aiMsg])
+    } finally {
       setLoading(false)
-    }, 1200)
+    }
   }
-
+  
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
